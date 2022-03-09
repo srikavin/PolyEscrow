@@ -1,0 +1,13 @@
+#background-radial-gradient {
+    width: 100vw;
+    height: 100vh;
+    transform: unset;
+    background: radial-gradient(150.6% 98.22% at 48.06% 0%, rgba(172, 227, 88, 0.6) 0%, rgba(200, 168, 255, 0) 100%), rgb(31, 33, 40);
+    background-blend-mode: overlay, normal;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    z-index: -1;
+}

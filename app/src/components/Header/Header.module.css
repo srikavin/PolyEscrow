@@ -1,0 +1,30 @@
+.header {
+    width: 100vw;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: 1fr;
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+}
+
+.branding {
+    grid-area: 1 / 1 / 2 / 2;
+}
+
+.navigation {
+    grid-area: 1 / 4 / 2 / 5;
+}
+
+.wallet_info {
+    grid-area: 1 / 6 / 2 / 8;
+    text-align: right;
+}
+
+.wallet_address {
+    font-weight: 400;
+    font-size: 1rem;
+}
+
+.branding {
+    text-align: center;
+}

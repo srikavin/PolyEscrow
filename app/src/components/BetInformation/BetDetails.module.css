@@ -1,0 +1,83 @@
+.amount {
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.container {
+    margin-bottom: 24px;
+}
+
+.alert {
+    width: 100%;
+    background-color: red;
+    border-color: red;
+    border-radius: 4px;
+    padding: 8px;
+    box-sizing: border-box;
+    margin: 0 0 8px;
+}
+
+.alert_close {
+    float: right;
+    cursor: pointer;
+}
+
+.token_symbol {
+    font-weight: 800;
+}
+
+.bet_name {
+    font-size: 1.2rem;
+    font-style: italic;
+}
+
+.timestamp {
+    text-align: right;
+}
+
+.actions {
+    text-align: right;
+}
+
+/*https://grid.layoutit.com/?id=TqIxjKh*/
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: min-content 1fr 1fr 1fr;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+    "alert alert alert"
+    "bet_name bet_name amount"
+    "addresses addresses timestamp"
+    "view_on_polyscan actions actions";
+}
+
+.view_on_polyscan {
+    grid-area: view_on_polyscan;
+}
+
+.actions {
+    grid-area: actions;
+}
+
+.timestamp {
+    grid-area: timestamp;
+}
+
+.addresses {
+    grid-area: addresses;
+}
+
+.bet_name {
+    grid-area: bet_name;
+}
+
+.amount {
+    grid-area: amount;
+}
+
+.alert {
+    grid-area: alert;
+}
