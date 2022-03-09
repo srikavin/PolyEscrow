@@ -55,7 +55,12 @@ function App() {
 
     if (error) {
         console.log(error);
-        return <>"Failed to connect to wallet: " + error.message</>;
+        return (
+            <>
+                <div id="background-radial-gradient"/>
+                <h1>Failed to connect to wallet: {error.message}</h1>
+            </>
+        );
     }
 
 
