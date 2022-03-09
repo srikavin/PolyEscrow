@@ -10,16 +10,19 @@ const BettingContractDeployedBlock = 25753029;
 export interface TokenDetails {
     name: string,
     symbol: string,
-    decimals: number
+    decimals: number,
+    logo?: string
 }
 
 export interface WalletInformation {
-    provider: ethers.providers.Web3Provider,
+    provider: ethers.providers.AlchemyWebSocketProvider,
     signer: ethers.providers.JsonRpcSigner,
     walletAddress: address,
     networkName: string,
     bettingContract: BettingContract,
+    connectedBettingContract: BettingContract,
     tokenContract: ERC20Contract,
+    connectedTokenContract: ERC20Contract,
     tokenBalance: bigint,
     tokenDetails: TokenDetails,
     authorizedAllowance: boolean
@@ -34,18 +37,19 @@ export async function getWalletProvider(): Promise<ethers.providers.Web3Provider
 }
 
 export async function getWalletInformation(provider: ethers.providers.Web3Provider, changeCallback: (accounts: String[]) => void): Promise<WalletInformation> {
+    const alchemyProvider = new ethers.providers.AlchemyWebSocketProvider('matic', 'ECsqg_FtjJffOw_QkzfVQ1cpmNQPiNdj');
+
     const signer = provider.getSigner();
 
-    const bettingContract = new ethers.Contract(BettingContractAddr, contractABI, provider).connect(signer) as BettingContract;
-    const tokenContract = new ethers.Contract(TokenContractAddr, erc20ABI, provider).connect(signer) as ERC20Contract;
+    const bettingContract = new ethers.Contract(BettingContractAddr, contractABI, alchemyProvider) as BettingContract;
+    const tokenContract = new ethers.Contract(TokenContractAddr, erc20ABI, alchemyProvider) as ERC20Contract;
 
-    const [account, network, tokenName, tokenSymbol, tokenDecimals] = await Promise.all([
+    const [account, network] = await Promise.all([
         getWalletAddress(provider),
-        provider.getNetwork(),
-        tokenContract.name(),
-        tokenContract.symbol(),
-        tokenContract.decimals(),
+        alchemyProvider.getNetwork()
     ]);
+
+    const tokenDetails = await alchemyProvider.send('alchemy_getTokenMetadata', ['0x8A953CfE442c5E8855cc6c61b1293FA648BAE472']);
 
     const [tokenBalance, authorizedAllowance] = await Promise.all([
         tokenContract.balanceOf(account),
@@ -54,18 +58,16 @@ export async function getWalletInformation(provider: ethers.providers.Web3Provid
     const networkName = network.name;
 
     return {
-        provider,
+        provider: alchemyProvider,
         signer,
         walletAddress: account,
         networkName,
         bettingContract: bettingContract,
+        connectedBettingContract: bettingContract.connect(signer) as BettingContract,
         tokenContract,
+        connectedTokenContract: tokenContract.connect(signer) as ERC20Contract,
         tokenBalance,
-        tokenDetails: {
-            name: tokenName,
-            symbol: tokenSymbol,
-            decimals: Number(tokenDecimals)
-        },
+        tokenDetails,
         authorizedAllowance
     };
 }
@@ -79,8 +81,8 @@ export async function getWalletAddress(provider: ethers.providers.Web3Provider) 
     return accounts[0];
 }
 
-export async function getBetInformation(provider: ethers.providers.Web3Provider, bet_id: bigint) {
-    const bettingContract = new ethers.Contract(BettingContractAddr, contractABI, provider) as BettingContract;
+export async function getBetInformation(walletInformation: WalletInformation, bet_id: bigint) {
+    const bettingContract = new ethers.Contract(BettingContractAddr, contractABI, walletInformation.provider) as BettingContract;
 
     return bettingContract.get_bet_details(bet_id);
 }
@@ -113,7 +115,8 @@ export async function authorizeERC20Token(walletInformation: WalletInformation) 
     const tokenContract = walletInformation.tokenContract;
 
     if (!await checkAuthorizedERC20Token(tokenContract, walletInformation.walletAddress)) {
-        return await tokenContract.approve(BettingContractAddr, BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'));
+        const connectedTokenContract = walletInformation.connectedTokenContract;
+        return await connectedTokenContract.approve(BettingContractAddr, BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'));
     }
 
     return true;

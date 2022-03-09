@@ -19,7 +19,7 @@ export function MakeBet(props: MakeBetProps) {
     const [betAmount, setBetAmount] = useState(0);
 
     const submitBet = useCallback(() => {
-        walletInformation.bettingContract.make_bet(betReason, BigInt(betAmount), targetAddress)
+        walletInformation.connectedBettingContract.make_bet(betReason, BigInt(betAmount), targetAddress)
             .then((r) => {
                 setError('successful: ' + r.hash);
                 console.log(r);

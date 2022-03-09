@@ -34,16 +34,9 @@ function App() {
         getWalletProvider().then((provider) => {
             // @ts-ignore
             provider.provider.on('accountsChanged', () => onAccountChange(provider));
-            // @ts-ignore
-            provider.provider.on('chainChanged', window.location.reload);
             onAccountChange(provider)
         }).catch(setError);
-
-        return () => {
-            // @ts-ignore
-            walletInformation?.provider.provider.removeListener('accountsChanged', onAccountChange)
-        };
-    }, [onAccountChange, walletInformation?.provider.provider]);
+    }, [onAccountChange, walletInformation?.provider]);
 
     const [involvedBets, setInvolvedBets] = useState<Array<BetCreatedEvent>>([]);
 

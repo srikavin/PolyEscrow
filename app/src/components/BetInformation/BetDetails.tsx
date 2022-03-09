@@ -40,19 +40,18 @@ export function BetDetails(props: BetDetailsProps) {
     const [transactionPending, setTransactionPending] = useState<string | undefined>(undefined);
     const [betBlock, setBetBlock] = useState<ethers.providers.Block>();
 
-    const {provider, tokenDetails, walletAddress, bettingContract} = props.walletInfo;
+    const {provider, tokenDetails, walletAddress, connectedBettingContract} = props.walletInfo;
 
     useEffect(() => {
         if (!betInfo) {
-            getBetInformation(provider, props.bet.args.bet_id).then(setBetInfo).catch(setError);
+            getBetInformation(props.walletInfo, props.bet.args.bet_id).then(setBetInfo).catch(setError);
             props.bet.getBlock().then(setBetBlock).catch(setError);
         }
     }, [props, betInfo, provider]);
 
     const refetchBets = useCallback(() => {
-        console.log('refetching!!')
-        getBetInformation(provider, props.bet.args.bet_id).then(setBetInfo).catch(setError);
-    }, [props.bet.args.bet_id, setBetInfo, setError, provider])
+        getBetInformation(props.walletInfo, props.bet.args.bet_id).then(setBetInfo).catch(setError);
+    }, [props.bet.args.bet_id, setBetInfo, setError, props.walletInfo])
 
     useEffect(() => {
         return listenToBetChanges(props.walletInfo, props.bet.args.bet_id, refetchBets);
@@ -67,36 +66,36 @@ export function BetDetails(props: BetDetailsProps) {
     }, [refetchBets]);
 
     const acceptBet = useCallback(() => {
-        bettingContract.accept_bet(props.bet.args.bet_id)
+        connectedBettingContract.accept_bet(props.bet.args.bet_id)
             .then(afterTransaction)
             .catch(setError);
-    }, [afterTransaction, bettingContract, props.bet]);
+    }, [afterTransaction, connectedBettingContract, props.bet]);
 
     const rejectBet = useCallback(() => {
-        bettingContract.reject_bet(props.bet.args.bet_id)
+        connectedBettingContract.reject_bet(props.bet.args.bet_id)
             .then(afterTransaction)
             .catch(setError);
-    }, [afterTransaction, bettingContract, props.bet]);
+    }, [afterTransaction, connectedBettingContract, props.bet]);
 
     const voteBurn = useCallback(() => {
-        bettingContract.vote(props.bet.args.bet_id, BetVote.BURN)
+        connectedBettingContract.vote(props.bet.args.bet_id, BetVote.BURN)
             .then(afterTransaction)
             .catch(setError);
-    }, [afterTransaction, bettingContract, props.bet]);
+    }, [afterTransaction, connectedBettingContract, props.bet]);
 
     const voteCancel = useCallback(() => {
-        bettingContract.vote(props.bet.args.bet_id, BetVote.CANCEL)
+        connectedBettingContract.vote(props.bet.args.bet_id, BetVote.CANCEL)
             .then(afterTransaction)
             .catch(setError);
-    }, [afterTransaction, bettingContract, props.bet]);
+    }, [afterTransaction, connectedBettingContract, props.bet]);
 
     const voteDefeat = useCallback(() => {
         if (!betInfo?.initiator) return;
-        bettingContract.vote(props.bet.args.bet_id,
+        connectedBettingContract.vote(props.bet.args.bet_id,
             walletAddress === betInfo.initiator ? BetVote.PARTICIPANT_WINS : BetVote.INITIATOR_WINS)
             .then(afterTransaction)
             .catch(setError);
-    }, [afterTransaction, bettingContract, props.bet, betInfo, walletAddress]);
+    }, [afterTransaction, connectedBettingContract, props.bet, betInfo, walletAddress]);
 
     if (error && (!betInfo || !betBlock)) {
         return (<div>Failed to load bet details: {error.message}</div>);
