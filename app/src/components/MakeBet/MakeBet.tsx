@@ -4,34 +4,34 @@ import {StyledButton} from "../StyledButton/StyledButton";
 import {ethers} from "ethers";
 
 export type MakeBetProps = {
-    walletInformation: WalletInformation
+    walletInformation: WalletInformation,
+    transactionCallback: () => void
 }
 
 export function MakeBet(props: MakeBetProps) {
-    const {walletInformation} = props;
+    const {walletInformation, transactionCallback} = props;
 
     const {tokenDetails} = walletInformation;
 
     const [error, setError] = useState<Error | string>();
-
     const [targetAddress, setTargetAddress] = useState('');
     const [betReason, setBetReason] = useState('');
     const [inputBetAmount, setInputBetAmount] = useState(0);
 
-    const betAmount = BigInt(inputBetAmount * 10**tokenDetails.decimals);
+    const betAmount = BigInt(inputBetAmount * 10 ** tokenDetails.decimals);
 
     const submitBet = useCallback(() => {
         console.log(betAmount);
         walletInformation.connectedBettingContract.make_bet(betReason, betAmount, targetAddress)
             .then((r) => {
-                setError('successful: ' + r.hash);
                 console.log(r);
-            })
-            .catch((error) => {
-                setError(error.message);
-                console.log(error);
-            });
-    }, [walletInformation, targetAddress, betReason, betAmount]);
+                setError('Executed transaction: ' + r.hash);
+                r.wait(5).then(transactionCallback);
+            }).catch((error) => {
+            setError(error.message);
+            console.log(error);
+        });
+    }, [walletInformation, targetAddress, betReason, betAmount, transactionCallback]);
 
     let formattedUnits = 'invalid input';
     try {
@@ -53,7 +53,8 @@ export function MakeBet(props: MakeBetProps) {
 
             <br/>
             Bet Amount: ({walletInformation.tokenDetails.symbol}) &nbsp;
-            <input type='number' min={0} value={inputBetAmount} onChange={(e) => setInputBetAmount(Number(e.target.value))}/>
+            <input type='number' min={0} value={inputBetAmount}
+                   onChange={(e) => setInputBetAmount(Number(e.target.value))}/>
 
             <br/>
 

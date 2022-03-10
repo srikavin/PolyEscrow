@@ -3,11 +3,12 @@ import {useCallback, useEffect, useState} from "react";
 import {getBetInformation, listenToBetChanges, WalletInformation} from "../../data/wallet";
 import {ethers} from "ethers";
 import {relativeTimeFromDates} from "../../utils/DateTimeFormatter";
-import {trimWalletAddress} from "../../utils/WalletDisplay";
+import {trimHash} from "../../utils/WalletDisplay";
 import styles from './BetDetails.module.css'
 import {GradientText} from "../GradientText/GradientText";
 import {StyledButton} from "../StyledButton/StyledButton";
 import {Bet, BetState, BetVote} from "../../data/bet";
+import {POLYSCAN_TX_BASE} from "../../data/environment";
 
 export interface BetDetailsProps {
     bet: BetCreatedEvent,
@@ -155,9 +156,8 @@ export function BetDetails(props: BetDetailsProps) {
             ) : ""}
             {transactionPending ? (
                 <div className={styles.alert}>
-                    Transaction with hash {transactionPending} &nbsp;
-                    (<a href={'https://mumbai.polygonscan.com/tx/' + transactionPending}>Polyscan</a>) is currently
-                    pending.
+                    Transaction with hash {trimHash(transactionPending)} (
+                    <a href={POLYSCAN_TX_BASE + transactionPending}>Polyscan</a>) is currently pending.
                     <span className={styles.alert_close} onClick={() => setError(undefined)}>X</span>
                 </div>
             ) : ""}
@@ -177,7 +177,7 @@ export function BetDetails(props: BetDetailsProps) {
             </div>
 
             <div className={styles.addresses}>
-                {trimWalletAddress(betInfo.initiator)} challenged {trimWalletAddress(betInfo.participant)}
+                {trimHash(betInfo.initiator)} challenged {trimHash(betInfo.participant)}
             </div>
 
             <div className={styles.view_on_polyscan}>

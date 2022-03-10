@@ -1,6 +1,6 @@
 import styles from './Header.module.css';
 import {StyledButton} from "../StyledButton/StyledButton";
-import {trimWalletAddress} from "../../utils/WalletDisplay";
+import {trimHash} from "../../utils/WalletDisplay";
 import {TokenDetails} from "../../data/wallet";
 import {ethers} from "ethers";
 import {GradientText} from "../GradientText/GradientText";
@@ -23,7 +23,7 @@ export function Header(props: HeaderProps) {
     );
 
     if (!props.loading) {
-        const trimmedWalletAddr = trimWalletAddress(props.walletAddress);
+        const trimmedWalletAddr = trimHash(props.walletAddress);
         walletInformation = (
             <>
                 <StyledButton theme='borderless'><span

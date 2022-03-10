@@ -1,5 +1,5 @@
 #background-radial-gradient {
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     transform: unset;
     background: radial-gradient(150.6% 98.22% at 48.06% 0%, rgba(172, 227, 88, 0.6) 0%, rgba(200, 168, 255, 0) 100%), rgb(31, 33, 40);

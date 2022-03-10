@@ -1,7 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import './App.css';
-import {getInvolvedBets, getWalletInformation, WalletInformation} from "./data/wallet";
-import {BetCreatedEvent} from "./data/contract";
+import {getWalletInformation, WalletInformation} from "./data/wallet";
 import {Header} from "./components/Header/Header";
 import {BetsContainer} from './components/BetsContainer/BetsContainer';
 import {MainContainer} from "./components/MainContainer/MainContainer";
@@ -29,14 +28,6 @@ function App() {
             walletInformation?.signer.provider.provider.removeListener('accountsChanged', onAccountChange);
         }
     }, [onAccountChange, walletInformation]);
-
-    const [involvedBets, setInvolvedBets] = useState<Array<BetCreatedEvent>>([]);
-
-    useEffect(() => {
-        if (walletInformation) {
-            getInvolvedBets(walletInformation).then(setInvolvedBets).catch(setError);
-        }
-    }, [walletInformation]);
 
     if (error) {
         console.log(error);
@@ -70,7 +61,7 @@ function App() {
         <>
             <Header loading={false} walletAddress={walletAddress} networkName={networkName}
                     tokenDetails={walletInformation.tokenDetails} balance={walletInformation.tokenBalance}/>
-            <BetsContainer bets={involvedBets} walletInformation={walletInformation}/>
+            <BetsContainer walletInformation={walletInformation}/>
         </>
     );
 }
