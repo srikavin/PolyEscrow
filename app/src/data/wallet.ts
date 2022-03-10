@@ -32,6 +32,8 @@ export async function getWalletInformation(): Promise<WalletInformation> {
     let provider = new ethers.providers.Web3Provider((window as any).ethereum);
 
     await provider.send("eth_requestAccounts", []);
+    await provider.send('wallet_switchEthereumChain', [{chainId: '0x89'}]);
+    await (window as any).ethereum.on('chainChanged', () => window.location.reload());
 
     const alchemyProvider = new ethers.providers.AlchemyWebSocketProvider('matic', 'ECsqg_FtjJffOw_QkzfVQ1cpmNQPiNdj');
 
