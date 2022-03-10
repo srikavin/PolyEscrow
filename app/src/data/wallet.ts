@@ -28,15 +28,11 @@ export interface WalletInformation {
     authorizedAllowance: boolean
 }
 
-export async function getWalletProvider(): Promise<ethers.providers.Web3Provider> {
+export async function getWalletInformation(): Promise<WalletInformation> {
     let provider = new ethers.providers.Web3Provider((window as any).ethereum);
 
     await provider.send("eth_requestAccounts", []);
 
-    return provider;
-}
-
-export async function getWalletInformation(provider: ethers.providers.Web3Provider, changeCallback: (accounts: String[]) => void): Promise<WalletInformation> {
     const alchemyProvider = new ethers.providers.AlchemyWebSocketProvider('matic', 'ECsqg_FtjJffOw_QkzfVQ1cpmNQPiNdj');
 
     const signer = provider.getSigner();

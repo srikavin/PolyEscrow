@@ -1,42 +1,34 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import './App.css';
-import {
-    authorizeERC20Token,
-    getInvolvedBets,
-    getWalletInformation,
-    getWalletProvider,
-    WalletInformation
-} from "./data/wallet";
+import {getInvolvedBets, getWalletInformation, WalletInformation} from "./data/wallet";
 import {BetCreatedEvent} from "./data/contract";
 import {Header} from "./components/Header/Header";
 import {BetsContainer} from './components/BetsContainer/BetsContainer';
+import {MainContainer} from "./components/MainContainer/MainContainer";
 
 function App() {
     const [walletInformation, setWalletInformation] = useState<WalletInformation>();
     const [error, setError] = useState<Error>();
 
-    const onAccountChange = useCallback((provider) => {
-        getWalletInformation(provider, onAccountChange)
-            .then((wallet) => {
-                console.log(wallet)
-                if (!wallet.authorizedAllowance) {
-                    authorizeERC20Token(wallet).then(() => {
-                        setWalletInformation(wallet);
-                    }).catch(setError);
-                } else {
-                    setWalletInformation(wallet);
-                }
-            })
-            .catch(setError);
-    }, [setWalletInformation]);
+    const onAccountChange = useCallback(() => {
+        console.log('ON ACCOUNT CHANGE')
+        getWalletInformation().then(walletInformation => {
+            // @ts-ignore
+            walletInformation.signer.provider.provider.on('accountsChanged', onAccountChange);
+            setWalletInformation(walletInformation);
+        }).catch(setError);
+    }, []);
 
     useEffect(() => {
-        getWalletProvider().then((provider) => {
+        if (!walletInformation) {
+            onAccountChange();
+        }
+
+        return () => {
             // @ts-ignore
-            provider.provider.on('accountsChanged', () => onAccountChange(provider));
-            onAccountChange(provider)
-        }).catch(setError);
-    }, [onAccountChange, walletInformation?.provider]);
+            walletInformation?.signer.provider.provider.removeListener('accountsChanged', onAccountChange);
+        }
+    }, [onAccountChange, walletInformation]);
 
     const [involvedBets, setInvolvedBets] = useState<Array<BetCreatedEvent>>([]);
 
@@ -50,8 +42,12 @@ function App() {
         console.log(error);
         return (
             <>
-                <div id="background-radial-gradient"/>
-                <h1>Failed to connect to wallet: {error.message}</h1>
+                <Header loading={true}/>
+                <MainContainer>
+                    <h1>Failed to connect to Web3 wallet</h1>
+                    <p>See console for more details.</p>
+                    <p>{error.message}</p>
+                </MainContainer>
             </>
         );
     }
@@ -60,29 +56,21 @@ function App() {
     if (!walletInformation) {
         return (
             <>
-                <div id="background-radial-gradient"/>
-                <div className="App">
-                    <Header loading={true}/>
-                </div>
+                <Header loading={true}/>
+                <MainContainer>
+                    <h1>Connecting to Web3 wallet...</h1>
+                </MainContainer>
             </>
         )
     }
 
-    const {walletAddress, authorizedAllowance, networkName} = walletInformation;
+    const {walletAddress, networkName} = walletInformation;
 
     return (
         <>
-            <div id="background-radial-gradient"/>
-            <div className="App">
-                <Header loading={false} walletAddress={walletAddress} networkName={networkName}
-                        tokenDetails={walletInformation.tokenDetails} balance={walletInformation.tokenBalance}/>
-                {!authorizedAllowance ? (
-                    <button onClick={() => authorizeERC20Token(walletInformation)}>Authorize (Only needs to be
-                        done once)</button>
-                ) : null}
-
-                <BetsContainer bets={involvedBets} walletInformation={walletInformation}/>
-            </div>
+            <Header loading={false} walletAddress={walletAddress} networkName={networkName}
+                    tokenDetails={walletInformation.tokenDetails} balance={walletInformation.tokenBalance}/>
+            <BetsContainer bets={involvedBets} walletInformation={walletInformation}/>
         </>
     );
 }

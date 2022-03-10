@@ -1,6 +1,6 @@
 .button {
     background-color: rgb(33, 36, 41);
-    border: 1px solid rgb(33, 36, 41);
+    border: 1px solid #bbbaba;
     color: rgb(255, 255, 255);
     font-weight: 500;
 
@@ -8,7 +8,11 @@
     border-radius: 10px;
 
     transition: border 100ms, background-color 100ms;
-    margin: auto 4px;
+    margin: auto 4px auto 0;
+}
+
+.button.borderless {
+    border: 1px solid transparent;
 }
 
 .button:disabled {
@@ -17,7 +21,7 @@
 }
 
 .button:hover:not(:disabled) {
-    border: 1px solid #4f4e4e;
+    border: 1px solid white;
     cursor: pointer;
 }
 

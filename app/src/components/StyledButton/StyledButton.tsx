@@ -2,7 +2,7 @@ import styles from './StyledButton.module.css'
 import {PropsWithChildren} from "react";
 
 export type StyledButtonProps = {
-    theme?: 'default' | 'danger',
+    theme?: 'default' | 'danger' | 'borderless',
     onClick?: () => void,
     disabled?: boolean
 } & PropsWithChildren<any>;

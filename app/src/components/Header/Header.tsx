@@ -3,6 +3,7 @@ import {StyledButton} from "../StyledButton/StyledButton";
 import {trimWalletAddress} from "../../utils/WalletDisplay";
 import {TokenDetails} from "../../data/wallet";
 import {ethers} from "ethers";
+import {GradientText} from "../GradientText/GradientText";
 
 export type HeaderProps = {
     loading: true
@@ -15,19 +16,27 @@ export type HeaderProps = {
 }
 
 export function Header(props: HeaderProps) {
-    let walletInformation = (<>"Connecting to wallet..."</>);
+    let walletInformation = (
+        <StyledButton theme='borderless'>
+            Connecting to wallet...
+        </StyledButton>
+    );
 
     if (!props.loading) {
         const trimmedWalletAddr = trimWalletAddress(props.walletAddress);
         walletInformation = (
             <>
-                <StyledButton><span className={styles.wallet_address}>{trimmedWalletAddr}</span></StyledButton>
-                <StyledButton>
+                <StyledButton theme='borderless'><span
+                    className={styles.wallet_address}>{trimmedWalletAddr}</span>
+                </StyledButton>
+                <StyledButton theme='borderless'>
                     <span className={styles.wallet_address}>
-                        {ethers.utils.formatUnits(props.balance, props.tokenDetails.decimals)} {props.tokenDetails.symbol}
+                        {ethers.utils.formatUnits(props.balance, props.tokenDetails.decimals)} <b><GradientText>{props.tokenDetails.symbol}</GradientText></b>
                     </span>
                 </StyledButton>
-                <StyledButton><span className={styles.wallet_address}>{props.networkName}</span></StyledButton>
+                <StyledButton theme='borderless'><span
+                    className={styles.wallet_address}>{props.networkName}</span>
+                </StyledButton>
             </>
         );
     }

@@ -16,19 +16,28 @@ export function MakeBet(props: MakeBetProps) {
 
     const [targetAddress, setTargetAddress] = useState('');
     const [betReason, setBetReason] = useState('');
-    const [betAmount, setBetAmount] = useState(0);
+    const [inputBetAmount, setInputBetAmount] = useState(0);
+
+    const betAmount = BigInt(inputBetAmount * 10**tokenDetails.decimals);
 
     const submitBet = useCallback(() => {
-        walletInformation.connectedBettingContract.make_bet(betReason, BigInt(betAmount), targetAddress)
+        console.log(betAmount);
+        walletInformation.connectedBettingContract.make_bet(betReason, betAmount, targetAddress)
             .then((r) => {
                 setError('successful: ' + r.hash);
                 console.log(r);
             })
             .catch((error) => {
-                setError(error);
+                setError(error.message);
                 console.log(error);
             });
     }, [walletInformation, targetAddress, betReason, betAmount]);
+
+    let formattedUnits = 'invalid input';
+    try {
+        formattedUnits = `${ethers.utils.formatUnits(betAmount, tokenDetails.decimals).toString()} ${tokenDetails.symbol}`;
+    } catch {
+    }
 
     return (
         <div>
@@ -43,13 +52,12 @@ export function MakeBet(props: MakeBetProps) {
             <input type='text' value={betReason} onChange={(e) => setBetReason(e.target.value)}/>
 
             <br/>
-            Bet Amount: ({walletInformation.tokenDetails.symbol}) &nbsp; <input type='number' value={betAmount}
-            /*@ts-ignore */
-                                                                                onChange={(e) => setBetAmount(e.target.value)}/>
+            Bet Amount: ({walletInformation.tokenDetails.symbol}) &nbsp;
+            <input type='number' min={0} value={inputBetAmount} onChange={(e) => setInputBetAmount(Number(e.target.value))}/>
 
             <br/>
 
-            {ethers.utils.formatUnits(betAmount, tokenDetails.decimals).toString()} {tokenDetails.symbol}
+            {formattedUnits}
 
             <br/>
 
