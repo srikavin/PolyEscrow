@@ -7,7 +7,6 @@ import {
     ALCHEMY_NETWORK,
     BETTING_CONTRACT_ADDR,
     BETTING_CONTRACT_DEPLOYED_BLOCK,
-    NETWORK_CHAIN_ID,
     TOKEN_CONTRACT_ADDR
 } from "./environment";
 
@@ -22,6 +21,7 @@ export interface WalletInformation {
     provider: ethers.providers.AlchemyWebSocketProvider,
     signer: ethers.providers.JsonRpcSigner,
     walletAddress: address,
+    signerNetworkName: string,
     networkName: string,
     bettingContract: BettingContract,
     connectedBettingContract: BettingContract,
@@ -36,7 +36,6 @@ export async function getWalletInformation(): Promise<WalletInformation> {
     let provider = new ethers.providers.Web3Provider((window as any).ethereum);
 
     await provider.send("eth_requestAccounts", []);
-    await provider.send('wallet_switchEthereumChain', [{chainId: NETWORK_CHAIN_ID}]);
     await (window as any).ethereum.on('chainChanged', () => window.location.reload());
 
     const alchemyProvider = new ethers.providers.AlchemyWebSocketProvider(ALCHEMY_NETWORK, ALCHEMY_KEY);
@@ -46,9 +45,10 @@ export async function getWalletInformation(): Promise<WalletInformation> {
     const bettingContract = new ethers.Contract(BETTING_CONTRACT_ADDR, contractABI, alchemyProvider) as BettingContract;
     const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDR, erc20ABI, alchemyProvider) as ERC20Contract;
 
-    const [account, network] = await Promise.all([
+    const [account, network, signerNetwork] = await Promise.all([
         getWalletAddress(provider),
-        alchemyProvider.getNetwork()
+        alchemyProvider.getNetwork(),
+        provider.getNetwork()
     ]);
 
     const tokenDetails = await alchemyProvider.send('alchemy_getTokenMetadata', [TOKEN_CONTRACT_ADDR]);
@@ -57,13 +57,13 @@ export async function getWalletInformation(): Promise<WalletInformation> {
         tokenContract.balanceOf(account),
         checkAuthorizedERC20Token(tokenContract, account)
     ]);
-    const networkName = network.name;
 
     return {
         provider: alchemyProvider,
         signer,
         walletAddress: account,
-        networkName,
+        signerNetworkName: signerNetwork.name,
+        networkName: network.name,
         bettingContract: bettingContract,
         connectedBettingContract: bettingContract.connect(signer) as BettingContract,
         tokenContract,

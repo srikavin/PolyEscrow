@@ -4,6 +4,8 @@ import {getWalletInformation, WalletInformation} from "./data/wallet";
 import {Header} from "./components/Header/Header";
 import {BetsContainer} from './components/BetsContainer/BetsContainer';
 import {MainContainer} from "./components/MainContainer/MainContainer";
+import {NETWORK_CHAIN_ID} from "./data/environment";
+import {StyledButton} from "./components/StyledButton/StyledButton";
 
 function App() {
     const [walletInformation, setWalletInformation] = useState<WalletInformation>();
@@ -56,6 +58,25 @@ function App() {
     }
 
     const {walletAddress, networkName} = walletInformation;
+
+    if (walletInformation.networkName !== walletInformation.signerNetworkName) {
+        return <>
+            <Header loading={false} walletAddress={walletAddress} networkName={networkName}
+                    tokenDetails={walletInformation.tokenDetails} balance={walletInformation.tokenBalance}/>
+            <MainContainer>
+                <h1>You are connected to a different network</h1>
+                <p>The smart contract is stored on '{walletInformation.networkName}', while your wallet is set
+                    to '{walletInformation.signerNetworkName}'.</p>
+                <StyledButton theme='danger' onClick={() => {
+                    walletInformation.signer.provider.send('wallet_switchEthereumChain', [{chainId: NETWORK_CHAIN_ID}])
+                }}>
+                    Change Network
+                </StyledButton>
+
+            </MainContainer>
+        </>
+    }
+
 
     return (
         <>
