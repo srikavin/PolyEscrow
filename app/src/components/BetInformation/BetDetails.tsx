@@ -78,6 +78,12 @@ export function BetDetails(props: BetDetailsProps) {
             .catch(setError);
     }, [afterTransaction, connectedBettingContract, props.bet]);
 
+    const voteClear = useCallback(() => {
+        connectedBettingContract.vote(props.bet.args.bet_id, BetVote.NONE)
+            .then(afterTransaction)
+            .catch(setError);
+    }, [afterTransaction, connectedBettingContract, props.bet]);
+
     const voteBurn = useCallback(() => {
         connectedBettingContract.vote(props.bet.args.bet_id, BetVote.BURN)
             .then(afterTransaction)
@@ -110,6 +116,7 @@ export function BetDetails(props: BetDetailsProps) {
         ([betInfo.initiator_vote, betInfo.participant_vote]) :
         ([betInfo.participant_vote, betInfo.initiator_vote]);
 
+    const clearVotes = (userVote === BetVote.NONE ? 1 : 0) + (opponentVote === BetVote.NONE ? 1 : 0);
     const burnVotes = (userVote === BetVote.BURN ? 1 : 0) + (opponentVote === BetVote.BURN ? 1 : 0);
     const cancelVotes = (userVote === BetVote.CANCEL ? 1 : 0) + (opponentVote === BetVote.CANCEL ? 1 : 0);
 
@@ -118,6 +125,10 @@ export function BetDetails(props: BetDetailsProps) {
     if (betInfo.state === BetState.STARTED) {
         actions = (
             <>
+                <StyledButton disabled={userVote === BetVote.NONE} onClick={voteClear}>
+                    Clear Vote {clearVotes > 0 ? `(${clearVotes})` : ''}
+                </StyledButton>
+
                 <StyledButton theme='danger' disabled={userVote === BetVote.BURN} onClick={voteBurn}>
                     Vote to Burn {burnVotes > 0 ? `(${burnVotes})` : ''}
                 </StyledButton>
