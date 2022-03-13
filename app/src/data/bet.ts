@@ -4,7 +4,8 @@ export enum BetState {
     NOT_CREATED,
     CREATED,
     STARTED,
-    RESOLVED,
+    RESOLVED_INITIATOR_WINS,
+    RESOLVED_PARTICIPANT_WINS,
     CANCELED,
     REFUNDED,
     BURNED
@@ -13,8 +14,7 @@ export enum BetState {
 export enum BetVote {
     NONE,
     CANCEL,
-    INITIATOR_WINS,
-    PARTICIPANT_WINS,
+    ADMIT_DEFEAT,
     BURN
 }
 

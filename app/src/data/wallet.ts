@@ -92,8 +92,8 @@ export async function getBetInformation(walletInformation: WalletInformation, be
 export async function getInvolvedBets(walletInformation: WalletInformation): Promise<Array<BetCreatedEvent>> {
     const bettingContract = walletInformation.bettingContract;
 
-    const filterInitiator = bettingContract.filters.BetCreated(null, null, walletInformation.walletAddress, null, null);
-    const filterParticipant = bettingContract.filters.BetCreated(null, null, null, walletInformation.walletAddress, null);
+    const filterInitiator = bettingContract.filters.BetCreated(null, walletInformation.walletAddress, null, null);
+    const filterParticipant = bettingContract.filters.BetCreated(null, null, walletInformation.walletAddress, null);
 
     const [initiatorBets, participantBets] = await Promise.all([
         bettingContract.queryFilter(filterInitiator, BETTING_CONTRACT_DEPLOYED_BLOCK),
@@ -118,20 +118,19 @@ export async function authorizeERC20Token(walletInformation: WalletInformation) 
 
     if (!await checkAuthorizedERC20Token(tokenContract, walletInformation.walletAddress)) {
         const connectedTokenContract = walletInformation.connectedTokenContract;
-        return await connectedTokenContract.approve(BETTING_CONTRACT_ADDR, BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'));
+        await connectedTokenContract.approve(BETTING_CONTRACT_ADDR, BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'))
+            .then(e => e.wait(5));
     }
 
     return true;
 }
 
-export function listenToBetChanges(walletInformation: WalletInformation, bet_id: bigint, callback: () => void) {
+export function listenToInvolvedBetCreations(walletInformation: WalletInformation, callback: () => void) {
     const {bettingContract, provider} = walletInformation;
 
     const filters = [
-        bettingContract.filters.BetRefunded(bet_id),
-        bettingContract.filters.BetRejected(bet_id),
-        bettingContract.filters.BetResolved(bet_id, null),
-        bettingContract.filters.BetVoted(bet_id, null, null),
+        bettingContract.filters.BetCreated(null, walletInformation.walletAddress, null, null),
+        bettingContract.filters.BetCreated(null, null, walletInformation.walletAddress, null),
     ];
 
     filters.forEach(filter => {
@@ -142,5 +141,17 @@ export function listenToBetChanges(walletInformation: WalletInformation, bet_id:
         filters.forEach(filter => {
             provider.removeListener(filter, callback);
         });
+    }
+}
+
+export function listenToBetChanges(walletInformation: WalletInformation, bet_id: bigint, callback: () => void) {
+    const {bettingContract, provider} = walletInformation;
+
+    const filter = bettingContract.filters.BetUpdated(bet_id);
+
+    provider.on(filter, callback);
+
+    return () => {
+        provider.removeListener(filter, callback);
     }
 }

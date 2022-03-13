@@ -1,23 +1,27 @@
 import {ethers} from "ethers";
+
 export type address = string;
 
 type ContractFilter<T> = T | Array<T> | null;
 
-class BettingContract extends ethers.Contract {
+class OwnedContract extends ethers.Contract {
+    readonly async getOwner(): Promise<ethers.providers.TransactionResponse>;
+
+    async setOwner(newOwner: address): Promise<ethers.providers.TransactionResponse>;
+}
+
+class RefundableContract extends OwnedContract {
+    readonly async isRefundWhitelisted(addr: address): Promise<boolean>;
+
+    async setRefundWhitelisted(addr: address, value: boolean): Promise<ethers.providers.TransactionResponse>;
+
+    readonly async getBaseGasRefund(): Promise<ethers.providers.TransactionResponse>;
+}
+
+class BettingContract extends RefundableContract {
     filters: {
-        BetCreated(bet_id: ContractFilter<bigint>, bet_text: ContractFilter<string>, initiator: ContractFilter<address>,
-                   target: ContractFilter<address>, bet_amount: ContractFilter<bigint>): ethers.EventFilter;
-
-        BetStarted(bet_id: ContractFilter<bigint>, initiator: ContractFilter<address>, participant: ContractFilter<address>,
-                   bet_amount: ContractFilter<bigint>): ethers.EventFilter;
-
-        BetRejected(bet_id: ContractFilter<bigint>): ethers.EventFilter;
-
-        BetResolved(bet_id: ContractFilter<bigint>, winner: ContractFilter<address>): ethers.EventFilter;
-
-        BetVoted(bet_id: ContractFilter<bigint>, voter: ContractFilter<address>, vote: ContractFilter<BetVote>): ethers.EventFilter;
-
-        BetRefunded(bet_id: ContractFilter<bigint>): ethers.EventFilter;
+        BetCreated(bet_id: ContractFilter<bigint>, initiator: ContractFilter<address>, target: ContractFilter<address>, bet_amount: ContractFilter<bigint>): ethers.EventFilter;
+        BetUpdated(bet_id: ContractFilter<bigint>): ethers.EventFilter;
     }
 
     async make_bet(bet_text: string, bet_amount: bigint, target: address): Promise<ethers.providers.TransactionResponse>;
@@ -56,7 +60,7 @@ class ERC20Contract extends ethers.Contract {
 
     async transfer(recipient: address, amount: bigint): Promise<boolean>;
 
-    async approve(spender: address, amount: bigint): Promise<boolean>;
+    async approve(spender: address, amount: bigint): Promise<ethers.providers.TransactionResponse>;
 
     async transferFrom(sender: address, recipient: address, amount: bigint): Promise<boolean>;
 

@@ -1,4 +1,4 @@
-import {BetCreatedEvent} from "../../data/contract";
+import {address, BetCreatedEvent} from "../../data/contract";
 import {useCallback, useEffect, useState} from "react";
 import {getBetInformation, listenToBetChanges, WalletInformation} from "../../data/wallet";
 import {ethers} from "ethers";
@@ -8,14 +8,18 @@ import styles from './BetDetails.module.css'
 import {GradientText} from "../GradientText/GradientText";
 import {StyledButton} from "../StyledButton/StyledButton";
 import {Bet, BetState, BetVote} from "../../data/bet";
-import {POLYSCAN_TX_BASE} from "../../data/environment";
+import {PolyscanLink} from "../PolyscanLink/PolyscanLink";
 
 export interface BetDetailsProps {
     bet: BetCreatedEvent,
     walletInfo: WalletInformation,
 }
 
-const state_to_human_readable = (state: BetState) => {
+const is_participant_in_bet = (bet: Bet, addr: address) => {
+    return bet.initiator === addr || bet.participant === addr;
+}
+
+const state_to_human_readable = (state: BetState, bet: Bet, addr: address) => {
     if (state === BetState.CREATED) {
         return "waiting for party to accept";
     } else if (state === BetState.REFUNDED) {
@@ -24,8 +28,20 @@ const state_to_human_readable = (state: BetState) => {
         return "the bet has been burned";
     } else if (state === BetState.CANCELED) {
         return "the bet has been canceled";
-    } else if (state === BetState.RESOLVED) {
-        return "the bet has been resolved";
+    } else if (state === BetState.RESOLVED_INITIATOR_WINS || state === BetState.RESOLVED_PARTICIPANT_WINS) {
+        if (is_participant_in_bet(bet, addr)) {
+            if (bet.initiator === addr && state === BetState.RESOLVED_INITIATOR_WINS) {
+                return "you have won the bet";
+            } else {
+                return "you have lost the bet";
+            }
+        } else {
+            if (state === BetState.RESOLVED_PARTICIPANT_WINS) {
+                return "the participant has won the bet";
+            } else {
+                return "the initiator has won the bet";
+            }
+        }
     } else if (state === BetState.STARTED) {
         return "the bet is in progress";
     } else if (state === BetState.NOT_CREATED) {
@@ -99,10 +115,24 @@ export function BetDetails(props: BetDetailsProps) {
     const voteDefeat = useCallback(() => {
         if (!betInfo?.initiator) return;
         connectedBettingContract.vote(props.bet.args.bet_id,
-            walletAddress === betInfo.initiator ? BetVote.PARTICIPANT_WINS : BetVote.INITIATOR_WINS)
+            BetVote.ADMIT_DEFEAT)
             .then(afterTransaction)
             .catch(setError);
-    }, [afterTransaction, connectedBettingContract, props.bet, betInfo, walletAddress]);
+    }, [afterTransaction, connectedBettingContract, props.bet, betInfo]);
+
+    const [relativeDateDifference, setRelativeDateDifference] = useState<string>('');
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (betBlock) {
+                setRelativeDateDifference(relativeTimeFromDates(new Date(betBlock.timestamp * 1000)));
+            }
+        }, 1000);
+
+        return () => {
+            clearInterval(interval);
+        }
+    }, [betBlock, setRelativeDateDifference]);
 
     if (error && (!betInfo || !betBlock)) {
         return (<div>Failed to load bet details: {error.message}</div>);
@@ -144,6 +174,7 @@ export function BetDetails(props: BetDetailsProps) {
         if (betInfo.initiator === walletAddress) {
             actions = (
                 <>
+                    <StyledButton onClick={voteDefeat}>Admit Defeat</StyledButton>
                     <StyledButton theme='danger' onClick={rejectBet}> Cancel Bet </StyledButton>
                 </>
             );
@@ -167,14 +198,14 @@ export function BetDetails(props: BetDetailsProps) {
             ) : ""}
             {transactionPending ? (
                 <div className={styles.alert}>
-                    Transaction with hash {trimHash(transactionPending)} (
-                    <a href={POLYSCAN_TX_BASE + transactionPending}>Polyscan</a>) is currently pending.
+                    Transaction with hash <PolyscanLink type="transaction" value={transactionPending}/> is currently
+                    pending.
                     <span className={styles.alert_close} onClick={() => setError(undefined)}>X</span>
                 </div>
             ) : ""}
 
             <div className={styles.timestamp}>
-                {relativeTimeFromDates(new Date(betBlock!.timestamp * 1000))}
+                {relativeDateDifference}
             </div>
 
             <div className={styles.bet_name}>
@@ -192,7 +223,7 @@ export function BetDetails(props: BetDetailsProps) {
             </div>
 
             <div className={styles.view_on_polyscan}>
-                <small><i>{state_to_human_readable(betInfo.state)}</i></small>
+                <small><i>{state_to_human_readable(betInfo.state, betInfo, walletAddress)}</i></small>
                 {/*<a href={'https://mumbai.polygonscan.com/tx/' + props.bet.transactionHash}>View on polygonscan</a>*/}
             </div>
 
